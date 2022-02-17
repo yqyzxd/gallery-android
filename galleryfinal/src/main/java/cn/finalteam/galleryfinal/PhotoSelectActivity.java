@@ -430,11 +430,13 @@ public class PhotoSelectActivity extends PhotoBaseActivity implements View.OnCli
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        int parentId = parent.getId();
-        if ( parentId == R.id.lv_folder_list ) {
-            folderItemClick(position);
-        } else {
-            photoItemClick(view, position);
+        if (!ClickUtils.isFastClick()) {
+            int parentId = parent.getId();
+            if (parentId == R.id.lv_folder_list) {
+                folderItemClick(position);
+            } else {
+                photoItemClick(view, position);
+            }
         }
     }
     private void folderItemClick(int position) {
