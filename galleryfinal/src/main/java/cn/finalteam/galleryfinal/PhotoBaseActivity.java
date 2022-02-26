@@ -52,7 +52,7 @@ import cn.finalteam.toolsfinal.io.FileUtils;
  * Author:pengjianbo
  * Date:15/10/10 下午5:46
  */
-public abstract class PhotoBaseActivity extends Activity implements EasyPermissions.PermissionCallbacks{
+public abstract class PhotoBaseActivity extends Activity implements EasyPermissions.PermissionCallbacks {
 
     protected static String mPhotoTargetFolder;
 
@@ -110,65 +110,73 @@ public abstract class PhotoBaseActivity extends Activity implements EasyPermissi
     public void toast(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
-    private String  mToFilePath;
+
+    private String mToFilePath;
+
     /**
      * 拍照
      */
     protected void takePhotoAction() {
-        if (!DeviceUtils.existSDCard()) {
-            String errormsg = getString(R.string.empty_sdcard);
-            toast(errormsg);
-            if (mTakePhotoAction) {
-                resultFailure(errormsg, true);
+        try {
+
+
+            if (!DeviceUtils.existSDCard()) {
+                String errormsg = getString(R.string.empty_sdcard);
+                toast(errormsg);
+                if (mTakePhotoAction) {
+                    resultFailure(errormsg, true);
+                }
+                return;
             }
-            return;
-        }
 
-        File takePhotoFolder = null;
-        if (StringUtils.isEmpty(mPhotoTargetFolder)) {
-            takePhotoFolder = GalleryFinal.getCoreConfig().getTakePhotoFolder();
-        } else {
-            takePhotoFolder = new File(mPhotoTargetFolder);
-        }
-        boolean suc = FileUtils.mkdirs(takePhotoFolder);
-        File toFile = new File(takePhotoFolder, "IMG" + DateUtils.format(new Date(), "yyyyMMddHHmmss") + ".jpg");
-        mToFilePath=toFile.getAbsolutePath();
-        ILogger.d("create folder=" + toFile.getAbsolutePath());
-        if (suc) {
-            int sdkInt=Build.VERSION.SDK_INT;
-            Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            if (sdkInt>=24){
-                mTakePhotoUri=FileProvider.getUriForFile(this, "com.marryu", toFile);
-                captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mTakePhotoUri);
-                captureIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-
-            }else {
-                mTakePhotoUri = Uri.fromFile(toFile);
-
-                captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mTakePhotoUri);
-                captureIntent.putExtra("android.intent.extras.CAMERA_FACING",
-                        android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
-                //captureIntent.putExtra("camerasensortype", 2); // 调用前置摄像头
-
+            File takePhotoFolder = null;
+            if (StringUtils.isEmpty(mPhotoTargetFolder)) {
+                takePhotoFolder = GalleryFinal.getCoreConfig().getTakePhotoFolder();
+            } else {
+                takePhotoFolder = new File(mPhotoTargetFolder);
             }
-            startActivityForResult(captureIntent, GalleryFinal.TAKE_REQUEST_CODE);
-        } else {
-            takePhotoFailure();
-            ILogger.e("create file failure");
+            boolean suc = FileUtils.mkdirs(takePhotoFolder);
+            File toFile = new File(takePhotoFolder, "IMG" + DateUtils.format(new Date(), "yyyyMMddHHmmss") + ".jpg");
+            mToFilePath = toFile.getAbsolutePath();
+            ILogger.d("create folder=" + toFile.getAbsolutePath());
+            if (suc) {
+                int sdkInt = Build.VERSION.SDK_INT;
+                Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (sdkInt >= 24) {
+                    mTakePhotoUri = FileProvider.getUriForFile(this, "com.marryu", toFile);
+                    captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mTakePhotoUri);
+                    captureIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+                } else {
+                    mTakePhotoUri = Uri.fromFile(toFile);
+
+                    captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mTakePhotoUri);
+                    captureIntent.putExtra("android.intent.extras.CAMERA_FACING",
+                            android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT);
+                    //captureIntent.putExtra("camerasensortype", 2); // 调用前置摄像头
+
+                }
+                startActivityForResult(captureIntent, GalleryFinal.TAKE_REQUEST_CODE);
+            } else {
+                takePhotoFailure();
+                ILogger.e("create file failure");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if ( requestCode == GalleryFinal.TAKE_REQUEST_CODE ) {
+        if (requestCode == GalleryFinal.TAKE_REQUEST_CODE) {
 
             if (resultCode == RESULT_OK && mTakePhotoUri != null) {
 
-                int sdkInt=Build.VERSION.SDK_INT;
-                String path=null;
-                if (sdkInt>=24){
-                    path=mToFilePath;
-                }else {
+                int sdkInt = Build.VERSION.SDK_INT;
+                String path = null;
+                if (sdkInt >= 24) {
+                    path = mToFilePath;
+                } else {
                     path = mTakePhotoUri.getPath();
                 }
 
@@ -215,7 +223,7 @@ public abstract class PhotoBaseActivity extends Activity implements EasyPermissi
         GalleryFinal.OnHanlderResultCallback callback = GalleryFinal.getCallback();
         int requestCode = GalleryFinal.getRequestCode();
         if (callback != null) {
-            if ( photoList != null && photoList.size() > 0 ) {
+            if (photoList != null && photoList.size() > 0) {
                 callback.onHanlderSuccess(requestCode, photoList);
             } else {
                 callback.onHanlderFailure(requestCode, getString(R.string.photo_list_empty));
@@ -227,10 +235,10 @@ public abstract class PhotoBaseActivity extends Activity implements EasyPermissi
     protected void resultFailureDelayed(String errormsg, boolean delayFinish) {
         GalleryFinal.OnHanlderResultCallback callback = GalleryFinal.getCallback();
         int requestCode = GalleryFinal.getRequestCode();
-        if ( callback != null ) {
+        if (callback != null) {
             callback.onHanlderFailure(requestCode, errormsg);
         }
-        if(delayFinish) {
+        if (delayFinish) {
             mFinishHanlder.sendEmptyMessageDelayed(0, 500);
         } else {
             finishGalleryFinalPage();
@@ -240,10 +248,10 @@ public abstract class PhotoBaseActivity extends Activity implements EasyPermissi
     protected void resultFailure(String errormsg, boolean delayFinish) {
         GalleryFinal.OnHanlderResultCallback callback = GalleryFinal.getCallback();
         int requestCode = GalleryFinal.getRequestCode();
-        if ( callback != null ) {
+        if (callback != null) {
             callback.onHanlderFailure(requestCode, errormsg);
         }
-        if(delayFinish) {
+        if (delayFinish) {
             finishGalleryFinalPage();
         } else {
             finishGalleryFinalPage();
